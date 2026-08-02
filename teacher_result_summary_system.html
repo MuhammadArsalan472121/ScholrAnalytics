@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Result Summary System</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --text:#172033;
+      --muted:#64748b;
+      --primary:#2563eb;
+      --primary-2:#1d4ed8;
+      --success:#16a34a;
+      --warning:#d97706;
+      --danger:#dc2626;
+      --border:#e2e8f0;
+      --shadow:0 12px 30px rgba(15,23,42,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,Segoe UI,Arial,sans-serif;
+      background:linear-gradient(135deg,#eef4ff 0%,#f8fafc 48%,#eefdf6 100%);
+      color:var(--text);
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden;
+    }
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      background:url('assets/ScholrAnalyticsDetails.png') center/cover no-repeat;
+      opacity:1;
+      filter:blur(4px);
+      pointer-events:none;
+      z-index:-1;
+    }
+    button,input,select{font:inherit}
+    .app{max-width:1500px;margin:auto;padding:24px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:18px;
+      background:rgba(255,255,255,.9);backdrop-filter:blur(10px);
+      border:1px solid rgba(226,232,240,.9);border-radius:22px;padding:18px 22px;
+      box-shadow:var(--shadow);position:sticky;top:12px;z-index:20;
+    }
+    .brand{display:flex;gap:14px;align-items:center}
+    .logo{
+      width:70px;height:45px;border-radius:20px;display:grid;place-items:center;
+      background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;
+      font-size:24px;font-weight:800;box-shadow:0 10px 24px rgba(37,99,235,.3);
+      overflow:hidden;
+    }
+    .logo img{
+      width:100%;height:100%;object-fit:contain;display:block;
+    }
+    h1{font-size:22px;margin:0}
+    .subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{
+      border:0;border-radius:12px;padding:11px 15px;cursor:pointer;font-weight:700;
+      display:inline-flex;align-items:center;gap:8px;transition:.2s;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-primary:hover{background:var(--primary-2)}
+    .btn-light{background:#eff6ff;color:#1d4ed8}
+    .btn-success{background:#dcfce7;color:#166534}
+    .btn-danger{background:#fee2e2;color:#991b1b}
+    .btn-dark{background:#0f172a;color:#fff}
+    .grid{display:grid;gap:18px}
+    .stats{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:20px}
+    .stat-card,.card{
+      background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .stat-card{padding:18px;position:relative;overflow:hidden}
+    .stat-label{font-size:13px;color:var(--muted);font-weight:700}
+    .stat-value{font-size:27px;font-weight:800;margin-top:8px}
+    .stat-note{font-size:12px;color:var(--muted);margin-top:4px}
+    .stat-card:after{
+      content:"";position:absolute;width:85px;height:85px;border-radius:50%;
+      right:-24px;top:-28px;background:rgba(37,99,235,.08)
+    }
+    .main-layout{grid-template-columns:410px minmax(0,1fr);margin-top:18px;align-items:start}
+    .card{padding:20px}
+    .card-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .card h2{margin:0;font-size:18px}
+    .small{font-size:12px;color:var(--muted)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field.full{grid-column:1/-1}
+    label{font-size:12px;font-weight:800;color:#475569}
+    input,select{
+      width:100%;border:1px solid var(--border);border-radius:11px;padding:10px 11px;
+      outline:none;background:#fff;color:var(--text);
+    }
+    input:focus,select:focus{border-color:#60a5fa;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+    .grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:6px}
+    .grade-box{background:#f8fafc;border:1px solid var(--border);padding:9px;border-radius:12px}
+    .grade-box label{display:block;text-align:center;margin-bottom:5px}
+    .grade-box input{text-align:center;padding:8px}
+    .calculated{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0;
+    }
+    .calc-chip{background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:10px;text-align:center}
+    .calc-chip b{display:block;font-size:16px;color:#1d4ed8;margin-top:3px}
+    .form-actions{display:flex;gap:10px;margin-top:12px}
+    .form-actions .btn{flex:1;justify-content:center}
+    .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
+    table{border-collapse:collapse;width:100%;min-width:1250px;background:#fff}
+    th,td{padding:11px 10px;border-bottom:1px solid var(--border);font-size:12px;text-align:center}
+    th{background:#0f172a;color:#fff;position:sticky;top:0;z-index:2;white-space:nowrap}
+    td:nth-child(2){text-align:left;font-weight:700}
+    tr:hover td{background:#f8fafc}
+    .badge{padding:5px 8px;border-radius:999px;font-weight:800;display:inline-block}
+    .good{background:#dcfce7;color:#166534}
+    .mid{background:#fef3c7;color:#92400e}
+    .bad{background:#fee2e2;color:#991b1b}
+    .icon-btn{border:0;background:transparent;cursor:pointer;padding:6px;border-radius:8px}
+    .icon-btn:hover{background:#eef2ff}
+    .summary-grid{grid-template-columns:repeat(3,1fr);margin-top:18px}
+    .summary-box{padding:18px}
+    .summary-box h3{margin:0 0 12px;font-size:15px}
+    .rank-item{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--border)}
+    .rank-item:last-child{border-bottom:0}
+    .rank-name{font-size:13px;font-weight:700}
+    .rank-meta{font-size:11px;color:var(--muted);margin-top:3px}
+    .rank-score{font-size:14px;font-weight:800;color:#1d4ed8}
+    .empty{text-align:center;color:var(--muted);padding:35px 15px}
+    .modal{
+      position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;
+      justify-content:center;padding:20px;z-index:50;
+    }
+    .modal.show{display:flex}
+    .modal-content{
+      width:min(1000px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:22px;
+      box-shadow:0 30px 80px rgba(15,23,42,.3);padding:22px;
+    }
+    .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+    .tab{border:1px solid var(--border);background:#fff;padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+    .tab.active{background:#0f172a;color:#fff}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+    .list-editor{display:flex;gap:8px;margin-bottom:12px}
+    .tag-list{display:flex;gap:8px;flex-wrap:wrap}
+    .tag{background:#eff6ff;border:1px solid #bfdbfe;border-radius:999px;padding:7px 10px;display:flex;gap:8px;align-items:center}
+    .criteria-table{min-width:800px}
+    .criteria-table input{min-width:80px}
+    .notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:11px;border-radius:12px;font-size:12px;margin-bottom:12px}
+    .drop-zone{
+      border:2px dashed #93c5fd;border-radius:16px;padding:25px;text-align:center;background:#eff6ff;
+      cursor:pointer;
+    }
+    .drop-zone:hover{background:#dbeafe}
+    .hidden{display:none}
+    .footer{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;padding:24px 24px 24px 16px;gap:12px;background-size:auto 40px;}
+    .details-badge{max-height:40px;opacity:.9;display:block}
+    @media(max-width:1100px){
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .main-layout{grid-template-columns:1fr}
+      .summary-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:650px){
+      .app{padding:12px}.topbar{position:static;align-items:flex-start;flex-direction:column}
+      .stats{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}
+      .grade-grid{grid-template-columns:repeat(2,1fr)}.calculated{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo"><img src="assets/SALogo.png" alt="ScholrAnalytics Logo"></div>
+      <div>
+        <h1>Teacher Result Summary System</h1>
+        <div class="subtitle">Teacher-wise, subject-wise and section-wise performance analysis</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-light" onclick="downloadTemplate()">⬇ Template</button>
+      <button class="btn btn-success" onclick="document.getElementById('excelFile').click()">⬆ Import Excel</button>
+      <button class="btn btn-primary" onclick="exportExcel()">📊 Export Excel</button>
+      <button class="btn btn-dark" onclick="openSettings()">⚙ Settings</button>
+      <input id="excelFile" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importExcel(event)">
+    </div>
+  </header>
+
+  <section class="grid stats">
+    <div class="stat-card"><div class="stat-label">Total Records</div><div class="stat-value" id="statRecords">0</div><div class="stat-note">Teacher result entries</div></div>
+    <div class="stat-card"><div class="stat-label">Average Result</div><div class="stat-value" id="statResult">0%</div><div class="stat-note">Overall pass percentage</div></div>
+    <div class="stat-card"><div class="stat-label">Average GPA</div><div class="stat-value" id="statGPA">0.00</div><div class="stat-note">Weighted grade points</div></div>
+    <div class="stat-card"><div class="stat-label">Best Subject</div><div class="stat-value" id="statSubject" style="font-size:18px">—</div><div class="stat-note" id="statSubjectNote">No data</div></div>
+    <div class="stat-card"><div class="stat-label">Best Section</div><div class="stat-value" id="statSection" style="font-size:18px">—</div><div class="stat-note" id="statSectionNote">No data</div></div>
+  </section>
+
+  <section class="grid main-layout">
+    <div class="card">
+      <div class="card-title-row">
+        <div><h2 id="formTitle">Add Teacher Result</h2><div class="small">Values calculate automatically</div></div>
+        <button class="btn btn-light" onclick="resetForm()">New</button>
+      </div>
+
+      <form id="resultForm" onsubmit="saveRecord(event)">
+        <input type="hidden" id="editId">
+        <div class="form-grid">
+          <div class="field full"><label>Teacher Name</label><input id="teacherName" required placeholder="Enter teacher name"></div>
+          <div class="field"><label>Class</label><select id="className" required onchange="onClassChange()"></select></div>
+          <div class="field"><label>Section</label><select id="section" required></select></div>
+          <div class="field full"><label>Subject</label><select id="subject" required></select></div>
+          <div class="field"><label>Total Appeared Students</label><input id="appeared" type="number" min="0" required oninput="calculateLive()"></div>
+          <div class="field"><label>No. of Passed Students</label><input id="passed" type="number" min="0" required oninput="calculateLive()"></div>
+        </div>
+
+        <div style="margin-top:16px">
+          <label>Number of Grades</label>
+          <div class="grade-grid">
+            <div class="grade-box"><label>A*</label><input id="gAStar" type="number" min="0" value="0" oninput="calculateLive()"></div>
+            <div class="grade-box"><label>A</label><input id="gA" type="number" min="0" value="0" oninput="calculateLive()"></div>
+            <div class="grade-box"><label>B</label><input id="gB" type="number" min="0" value="0" oninput="calculateLive()"></div>
+            <div class="grade-box"><label>C</label><input id="gC" type="number" min="0" value="0" oninput="calculateLive()"></div>
+            <div class="grade-box"><label>D</label><input id="gD" type="number" min="0" value="0" oninput="calculateLive()"></div>
+            <div class="grade-box"><label>E</label><input id="gE" type="number" min="0" value="0" oninput="calculateLive()"></div>
+            <div class="grade-box"><label>F</label><input id="gF" type="number" min="0" value="0" oninput="calculateLive()"></div>
+          </div>
+        </div>
+
+        <div class="calculated">
+          <div class="calc-chip">Result %<b id="liveResult">0.00%</b></div>
+          <div class="calc-chip">GPA<b id="liveGPA">0.00</b></div>
+          <div class="calc-chip">Grades Total<b id="liveGradeTotal">0</b></div>
+        </div>
+        <div id="validationMsg" class="small"></div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">💾 Save Result</button>
+          <button class="btn btn-light" type="button" onclick="resetForm()">Clear</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <div class="card-title-row">
+        <div><h2>Result Records</h2><div class="small">Search, edit, delete and analyze records</div></div>
+        <input id="searchBox" placeholder="Search teacher, class, subject..." oninput="renderTable()" style="max-width:290px">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sr.No</th><th>Teacher Name</th><th>Class</th><th>Section</th><th>Subject</th>
+              <th>Appeared</th><th>Passed</th><th>Result %</th><th>A*</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>GPA</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid summary-grid">
+    <div class="card summary-box"><h3>🏆 Top Teachers</h3><div id="teacherSummary" class="empty">No data available</div></div>
+    <div class="card summary-box"><h3>📚 Subject Performance</h3><div id="subjectSummary" class="empty">No data available</div></div>
+    <div class="card summary-box"><h3>🏫 Section Performance</h3><div id="sectionSummary" class="empty">No data available</div></div>
+  </section>
+
+  <div class="footer"><span>Data is stored locally in your browser. Export regularly for backup.</span><span id="copyrightText"></span></div>
+</div>
+
+<div class="modal" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-head">
+      <div><h2 style="margin:0">Settings</h2><div class="small">Manage classes, sections, subjects and grading criteria</div></div>
+      <button class="btn btn-danger" onclick="closeSettings()">✕ Close</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('classes',this)">Classes</button>
+      <button class="tab" onclick="showTab('sections',this)">Sections</button>
+      <button class="tab" onclick="showTab('subjects',this)">Subjects</button>
+      <button class="tab" onclick="showTab('criteria',this)">Grading Criteria</button>
+      <button class="tab" onclick="showTab('data',this)">Data Management</button>
+    </div>
+
+    <div class="tab-pane active" id="tab-classes">
+      <div class="list-editor"><input id="newClass" placeholder="e.g. Class 9"><button class="btn btn-primary" onclick="addListItem('classes','newClass')">Add Class</button></div>
+      <div class="tag-list" id="classesList"></div>
+    </div>
+    <div class="tab-pane" id="tab-sections">
+      <div class="list-editor"><input id="newSection" placeholder="e.g. A"><button class="btn btn-primary" onclick="addListItem('sections','newSection')">Add Section</button></div>
+      <div class="tag-list" id="sectionsList"></div>
+    </div>
+    <div class="tab-pane" id="tab-subjects">
+      <div class="list-editor"><input id="newSubject" placeholder="e.g. Mathematics"><button class="btn btn-primary" onclick="addListItem('subjects','newSubject')">Add Subject</button></div>
+      <div class="tag-list" id="subjectsList"></div>
+    </div>
+    <div class="tab-pane" id="tab-criteria">
+      <div class="notice">Default criteria for Class 10 is already added. Create or edit criteria for any class. Minimum percentage means the lowest percentage required for that grade.</div>
+      <div class="field" style="max-width:300px;margin-bottom:12px"><label>Select Class</label><select id="criteriaClass" onchange="renderCriteriaEditor()"></select></div>
+      <div class="table-wrap">
+        <table class="criteria-table">
+          <thead><tr><th>Grade</th><th>Minimum %</th><th>Grade Point</th></tr></thead>
+          <tbody id="criteriaBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="saveCriteria()">Save Criteria</button>
+    </div>
+    <div class="tab-pane" id="tab-data">
+      <div class="drop-zone" onclick="document.getElementById('excelFile').click()">
+        <h3 style="margin:0 0 8px">Import Teacher Data from Excel</h3>
+        <div class="small">Click to select XLSX, XLS or CSV file. Grade counts and results will be calculated automatically.</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px">
+        <button class="btn btn-light" onclick="downloadTemplate()">Download Import Template</button>
+        <button class="btn btn-primary" onclick="exportExcel()">Export All Data</button>
+        <button class="btn btn-danger" onclick="clearAllData()">Clear All Records</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "teacherResultSystem_v2";
+const defaultState = {
+  records: [],
+  classes: ["Class 9","Class 10","O Level","A Level"],
+  sections: ["A","B","C"],
+  subjects: ["English","Mathematics","Physics","Chemistry","Biology","Computer Science","Urdu","Islamiyat","Pakistan Studies"],
+  criteria: {
+    "Class 10":[
+      {grade:"A*",min:80,point:6},
+      {grade:"A",min:70,point:5},
+      {grade:"B",min:60,point:4},
+      {grade:"C",min:50,point:3},
+      {grade:"D",min:40,point:2},
+      {grade:"E",min:33,point:1},
+      {grade:"F",min:0,point:0}
+    ]
+  }
+};
+
+let state = loadState();
+
+function loadState(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return saved ? {...structuredClone(defaultState),...saved} : structuredClone(defaultState);
+  }catch(e){ return structuredClone(defaultState); }
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
+function num(id){ return Math.max(0,Number(document.getElementById(id).value)||0); }
+function esc(v){ return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+
+function init(){
+  populateDropdowns();
+  renderTable();
+  updateDashboard();
+  renderSettingsLists();
+  calculateLive();
+  const year=new Date().getFullYear();
+  const el=document.getElementById("copyrightText");
+  if(el) el.textContent=`© ${year} ARTS`;
+}
+function populateDropdowns(){
+  const classSel=document.getElementById("className"), secSel=document.getElementById("section"), subSel=document.getElementById("subject");
+  const old={c:classSel.value,s:secSel.value,u:subSel.value};
+  classSel.innerHTML=state.classes.map(x=>`<option>${esc(x)}</option>`).join("");
+  secSel.innerHTML=state.sections.map(x=>`<option>${esc(x)}</option>`).join("");
+  subSel.innerHTML=state.subjects.map(x=>`<option>${esc(x)}</option>`).join("");
+  if(state.classes.includes(old.c)) classSel.value=old.c;
+  if(state.sections.includes(old.s)) secSel.value=old.s;
+  if(state.subjects.includes(old.u)) subSel.value=old.u;
+  const cc=document.getElementById("criteriaClass");
+  if(cc){
+    const oldCC=cc.value;
+    cc.innerHTML=state.classes.map(x=>`<option>${esc(x)}</option>`).join("");
+    if(state.classes.includes(oldCC)) cc.value=oldCC;
+  }
+}
+function currentGradePoints(){
+  const cls=document.getElementById("className").value;
+  const criteria=state.criteria[cls] || defaultState.criteria["Class 10"];
+  return Object.fromEntries(criteria.map(x=>[x.grade,Number(x.point)]));
+}
+function calculateLive(){
+  const appeared=num("appeared"), passed=num("passed");
+  const grades={"A*":num("gAStar"),A:num("gA"),B:num("gB"),C:num("gC"),D:num("gD"),E:num("gE"),F:num("gF")};
+  const totalGrades=Object.values(grades).reduce((a,b)=>a+b,0);
+  const points=currentGradePoints();
+  const totalPoints=Object.entries(grades).reduce((s,[g,n])=>s+n*(points[g]??0),0);
+  const result=appeared?passed/appeared*100:0;
+  const gpa=totalGrades?totalPoints/totalGrades:0;
+  document.getElementById("liveResult").textContent=result.toFixed(2)+"%";
+  document.getElementById("liveGPA").textContent=gpa.toFixed(2);
+  document.getElementById("liveGradeTotal").textContent=totalGrades;
+  const msg=document.getElementById("validationMsg");
+  if(passed>appeared) msg.innerHTML='<span style="color:#dc2626">Passed students cannot be greater than appeared students.</span>';
+  else if(totalGrades && appeared && totalGrades!==appeared) msg.innerHTML='<span style="color:#d97706">Warning: Grade total does not match appeared students.</span>';
+  else msg.textContent="";
+  return {result,gpa,totalGrades,grades};
+}
+function onClassChange(){ calculateLive(); }
+
+function saveRecord(e){
+  e.preventDefault();
+  const calc=calculateLive(), appeared=num("appeared"), passed=num("passed");
+  if(passed>appeared) return alert("Passed students cannot be greater than appeared students.");
+  const data={
+    id:document.getElementById("editId").value || (Date.now()+"_"+Math.random().toString(16).slice(2)),
+    teacherName:document.getElementById("teacherName").value.trim(),
+    className:document.getElementById("className").value,
+    section:document.getElementById("section").value,
+    subject:document.getElementById("subject").value,
+    appeared,passed,result:Number(calc.result.toFixed(2)),
+    grades:calc.grades,gpa:Number(calc.gpa.toFixed(2))
+  };
+  const idx=state.records.findIndex(r=>r.id===data.id);
+  if(idx>=0) state.records[idx]=data; else state.records.push(data);
+  saveState(); resetForm(); renderTable(); updateDashboard();
+}
+
+function resetForm(){
+  document.getElementById("resultForm").reset();
+  document.getElementById("editId").value="";
+  ["gAStar","gA","gB","gC","gD","gE","gF"].forEach(id=>document.getElementById(id).value=0);
+  document.getElementById("formTitle").textContent="Add Teacher Result";
+  calculateLive();
+}
+function editRecord(id){
+  const r=state.records.find(x=>x.id===id); if(!r)return;
+  document.getElementById("editId").value=r.id;
+  document.getElementById("teacherName").value=r.teacherName;
+  document.getElementById("className").value=r.className;
+  document.getElementById("section").value=r.section;
+  document.getElementById("subject").value=r.subject;
+  document.getElementById("appeared").value=r.appeared;
+  document.getElementById("passed").value=r.passed;
+  const map={gAStar:"A*",gA:"A",gB:"B",gC:"C",gD:"D",gE:"E",gF:"F"};
+  Object.entries(map).forEach(([id,g])=>document.getElementById(id).value=r.grades[g]||0);
+  document.getElementById("formTitle").textContent="Edit Teacher Result";
+  calculateLive(); window.scrollTo({top:0,behavior:"smooth"});
+}
+function deleteRecord(id){
+  if(!confirm("Delete this record?")) return;
+  state.records=state.records.filter(r=>r.id!==id); saveState(); renderTable(); updateDashboard();
+}
+function resultBadge(v){ return v>=80?"good":v>=50?"mid":"bad"; }
+
+function renderTable(){
+  const q=document.getElementById("searchBox").value.toLowerCase().trim();
+  const rows=state.records.filter(r=>[r.teacherName,r.className,r.section,r.subject].join(" ").toLowerCase().includes(q));
+  const body=document.getElementById("recordsBody");
+  if(!rows.length){body.innerHTML=`<tr><td colspan="17"><div class="empty">No result records found.</div></td></tr>`;return;}
+  body.innerHTML=rows.map((r,i)=>`
+    <tr>
+      <td>${i+1}</td><td>${esc(r.teacherName)}</td><td>${esc(r.className)}</td><td>${esc(r.section)}</td><td>${esc(r.subject)}</td>
+      <td>${r.appeared}</td><td>${r.passed}</td><td><span class="badge ${resultBadge(r.result)}">${r.result.toFixed(2)}%</span></td>
+      <td>${r.grades["A*"]||0}</td><td>${r.grades.A||0}</td><td>${r.grades.B||0}</td><td>${r.grades.C||0}</td>
+      <td>${r.grades.D||0}</td><td>${r.grades.E||0}</td><td>${r.grades.F||0}</td><td><b>${r.gpa.toFixed(2)}</b></td>
+      <td><button class="icon-btn" onclick="editRecord('${r.id}')" title="Edit">✏️</button><button class="icon-btn" onclick="deleteRecord('${r.id}')" title="Delete">🗑️</button></td>
+    </tr>`).join("");
+}
+function groupPerformance(key){
+  const map={};
+  state.records.forEach(r=>{
+    const k=r[key]||"Unknown";
+    if(!map[k]) map[k]={appeared:0,passed:0,gpaPoints:0,gradeCount:0,records:0};
+    map[k].appeared+=r.appeared; map[k].passed+=r.passed; map[k].gpaPoints+=r.gpa*(Object.values(r.grades).reduce((a,b)=>a+b,0)||1);
+    map[k].gradeCount+=(Object.values(r.grades).reduce((a,b)=>a+b,0)||1); map[k].records++;
+  });
+  return Object.entries(map).map(([name,v])=>({name,result:v.appeared?v.passed/v.appeared*100:0,gpa:v.gradeCount?v.gpaPoints/v.gradeCount:0,records:v.records}))
+    .sort((a,b)=>b.result-a.result || b.gpa-a.gpa);
+}
+function renderRank(containerId,data,metaFn){
+  const el=document.getElementById(containerId);
+  if(!data.length){el.className="empty";el.textContent="No data available";return;}
+  el.className="";
+  el.innerHTML=data.slice(0,5).map((x,i)=>`<div class="rank-item"><div><div class="rank-name">${i+1}. ${esc(x.name)}</div><div class="rank-meta">${metaFn(x)}</div></div><div class="rank-score">${x.result.toFixed(2)}%</div></div>`).join("");
+}
+function updateDashboard(){
+  const rec=state.records,totalAppeared=rec.reduce((s,r)=>s+r.appeared,0),totalPassed=rec.reduce((s,r)=>s+r.passed,0);
+  const avgResult=totalAppeared?totalPassed/totalAppeared*100:0;
+  const totalGradeCount=rec.reduce((s,r)=>s+Object.values(r.grades).reduce((a,b)=>a+b,0),0);
+  const avgGpa=totalGradeCount?rec.reduce((s,r)=>s+r.gpa*Object.values(r.grades).reduce((a,b)=>a+b,0),0)/totalGradeCount:0;
+  document.getElementById("statRecords").textContent=rec.length;
+  document.getElementById("statResult").textContent=avgResult.toFixed(2)+"%";
+  document.getElementById("statGPA").textContent=avgGpa.toFixed(2);
+  const subjects=groupPerformance("subject"), sections=groupPerformance("section"), teachers=groupPerformance("teacherName");
+  document.getElementById("statSubject").textContent=subjects[0]?.name||"—";
+  document.getElementById("statSubjectNote").textContent=subjects[0]?subjects[0].result.toFixed(2)+"% result":"No data";
+  document.getElementById("statSection").textContent=sections[0]?.name||"—";
+  document.getElementById("statSectionNote").textContent=sections[0]?sections[0].result.toFixed(2)+"% result":"No data";
+  renderRank("teacherSummary",teachers,x=>`${x.records} record(s) • GPA ${x.gpa.toFixed(2)}`);
+  renderRank("subjectSummary",subjects,x=>`${x.records} record(s) • GPA ${x.gpa.toFixed(2)}`);
+  renderRank("sectionSummary",sections,x=>`${x.records} record(s) • GPA ${x.gpa.toFixed(2)}`);
+}
+
+function openSettings(){document.getElementById("settingsModal").classList.add("show");populateDropdowns();renderSettingsLists();renderCriteriaEditor();}
+function closeSettings(){document.getElementById("settingsModal").classList.remove("show");populateDropdowns();}
+function showTab(name,btn){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
+  document.querySelectorAll(".tab-pane").forEach(x=>x.classList.remove("active"));document.getElementById("tab-"+name).classList.add("active");
+  if(name==="criteria") renderCriteriaEditor();
+}
+function renderSettingsLists(){
+  ["classes","sections","subjects"].forEach(type=>{
+    document.getElementById(type+"List").innerHTML=state[type].map((x,i)=>`<div class="tag">${esc(x)} <button class="icon-btn" onclick="removeListItem('${type}',${i})">✕</button></div>`).join("");
+  });
+}
+function addListItem(type,inputId){
+  const input=document.getElementById(inputId),value=input.value.trim();
+  if(!value||state[type].some(x=>x.toLowerCase()===value.toLowerCase())) return;
+  state[type].push(value);
+  if(type==="classes"&&!state.criteria[value]) state.criteria[value]=structuredClone(defaultState.criteria["Class 10"]);
+  input.value="";saveState();renderSettingsLists();populateDropdowns();
+}
+function removeListItem(type,index){
+  if(state[type].length<=1) return alert("At least one item is required.");
+  if(!confirm("Remove this item? Existing records will remain unchanged.")) return;
+  const removed=state[type].splice(index,1)[0];
+  if(type==="classes") delete state.criteria[removed];
+  saveState();renderSettingsLists();populateDropdowns();
+}
+function renderCriteriaEditor(){
+  const cls=document.getElementById("criteriaClass").value||state.classes[0];
+  if(!state.criteria[cls]) state.criteria[cls]=structuredClone(defaultState.criteria["Class 10"]);
+  document.getElementById("criteriaBody").innerHTML=state.criteria[cls].map((x,i)=>`
+    <tr><td><b>${x.grade}</b></td><td><input type="number" min="0" max="100" id="min_${i}" value="${x.min}"></td>
+    <td><input type="number" step="0.1" min="0" id="point_${i}" value="${x.point}"></td></tr>`).join("");
+}
+function saveCriteria(){
+  const cls=document.getElementById("criteriaClass").value;
+  state.criteria[cls]=state.criteria[cls].map((x,i)=>({...x,min:Number(document.getElementById("min_"+i).value)||0,point:Number(document.getElementById("point_"+i).value)||0}));
+  state.criteria[cls].sort((a,b)=>b.min-a.min);
+  saveState();calculateLive();alert("Grading criteria saved.");
+}
+
+function recordToRow(r,i){
+  return {
+    "Sr.No":i+1,"Teacher Name":r.teacherName,"Class":r.className,"Section":r.section,"Subject":r.subject,
+    "Total Appeared Students":r.appeared,"No.of Passed Students":r.passed,"Result Percentage %":r.result,
+    "A*":r.grades["A*"]||0,"A":r.grades.A||0,"B":r.grades.B||0,"C":r.grades.C||0,"D":r.grades.D||0,"E":r.grades.E||0,"F":r.grades.F||0,"GPA":r.gpa
+  };
+}
+function exportExcel(){
+  if(typeof XLSX==="undefined") return alert("Excel library could not load. Please connect to the internet and refresh.");
+  const wb=XLSX.utils.book_new();
+  const data=state.records.map(recordToRow);
+  const ws=XLSX.utils.json_to_sheet(data.length?data:[recordToRow({teacherName:"",className:"",section:"",subject:"",appeared:0,passed:0,result:0,grades:{},gpa:0},0)]);
+  ws["!cols"]=[{wch:8},{wch:24},{wch:13},{wch:10},{wch:20},{wch:22},{wch:20},{wch:20},...Array(8).fill({wch:9})];
+  XLSX.utils.book_append_sheet(wb,ws,"Teacher Results");
+
+  const summary=[
+    ["Metric","Value"],["Total Records",state.records.length],
+    ["Overall Result %",document.getElementById("statResult").textContent],
+    ["Average GPA",document.getElementById("statGPA").textContent],
+    ["Best Subject",document.getElementById("statSubject").textContent],
+    ["Best Section",document.getElementById("statSection").textContent]
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(summary),"Summary");
+  XLSX.writeFile(wb,"Teacher_Result_Summary.xlsx");
+}
+function downloadTemplate(){
+  if(typeof XLSX==="undefined") return alert("Excel library could not load. Please connect to the internet and refresh.");
+  const row={
+    "Teacher Name":"Example Teacher","Class":"Class 10","Section":"A","Subject":"Mathematics",
+    "Total Appeared Students":30,"No.of Passed Students":27,"A*":5,"A":8,"B":7,"C":4,"D":2,"E":1,"F":3
+  };
+  const wb=XLSX.utils.book_new(),ws=XLSX.utils.json_to_sheet([row]);
+  ws["!cols"]=Object.keys(row).map(k=>({wch:Math.max(k.length+2,14)}));
+  XLSX.utils.book_append_sheet(wb,ws,"Import Template");
+  XLSX.writeFile(wb,"Teacher_Result_Import_Template.xlsx");
+}
+function findVal(row,names){
+  const keys=Object.keys(row);
+  const normalized=s=>String(s).toLowerCase().replace(/[^a-z0-9*+]/g,"");
+  for(const name of names){
+    const key=keys.find(k=>normalized(k)===normalized(name));
+    if(key!==undefined) return row[key];
+  }
+  return "";
+}
+function importExcel(event){
+  const file=event.target.files[0]; if(!file)return;
+  if(typeof XLSX==="undefined") return alert("Excel library could not load. Please connect to the internet and refresh.");
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:"array"});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:""});
+      let added=0;
+      rows.forEach(row=>{
+        const teacherName=String(findVal(row,["Teacher Name","Teacher"])).trim();
+        if(!teacherName)return;
+        const className=String(findVal(row,["Class","Grade Class"])).trim()||state.classes[0];
+        const section=String(findVal(row,["Section"])).trim()||state.sections[0];
+        const subject=String(findVal(row,["Subject"])).trim()||state.subjects[0];
+        if(!state.classes.includes(className)){state.classes.push(className);state.criteria[className]=structuredClone(defaultState.criteria["Class 10"]);}
+        if(!state.sections.includes(section))state.sections.push(section);
+        if(!state.subjects.includes(subject))state.subjects.push(subject);
+        const grades={
+          "A*":Number(findVal(row,["A*","A+","A Star"]))||0,
+          A:Number(findVal(row,["A"]))||0,B:Number(findVal(row,["B"]))||0,C:Number(findVal(row,["C"]))||0,
+          D:Number(findVal(row,["D"]))||0,E:Number(findVal(row,["E"]))||0,F:Number(findVal(row,["F"]))||0
+        };
+        let appeared=Number(findVal(row,["Total Appeared Students","Appeared","Total Students"]))||0;
+        let passed=Number(findVal(row,["No.of Passed Students","No of Passed Students","Passed"]))||0;
+        const totalGrades=Object.values(grades).reduce((a,b)=>a+b,0);
+        if(!appeared) appeared=totalGrades;
+        if(!passed) passed=appeared-(grades.F||0);
+        const criteria=state.criteria[className]||defaultState.criteria["Class 10"];
+        const points=Object.fromEntries(criteria.map(x=>[x.grade,Number(x.point)]));
+        const gpa=totalGrades?Object.entries(grades).reduce((s,[g,n])=>s+n*(points[g]??0),0)/totalGrades:0;
+        const result=appeared?passed/appeared*100:0;
+        state.records.push({id:Date.now()+"_"+Math.random().toString(16).slice(2),teacherName,className,section,subject,appeared,passed,result:Number(result.toFixed(2)),grades,gpa:Number(gpa.toFixed(2))});
+        added++;
+      });
+      saveState();populateDropdowns();renderSettingsLists();renderTable();updateDashboard();closeSettings();
+      alert(`${added} record(s) imported successfully.`);
+    }catch(err){console.error(err);alert("Could not import this file. Please use the provided template.");}
+    event.target.value="";
+  };
+  reader.readAsArrayBuffer(file);
+}
+function clearAllData(){
+  if(!confirm("This will delete all result records. Continue?"))return;
+  state.records=[];saveState();renderTable();updateDashboard();closeSettings();
+}
+window.addEventListener("click",e=>{if(e.target===document.getElementById("settingsModal"))closeSettings();});
+init();
+</script>
+</body>
+</html>
