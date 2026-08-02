@@ -36,9 +36,51 @@
       inset:0;
       background:url('assets/ScholrAnalyticsDetails.png') center/cover no-repeat;
       opacity:1;
-      filter:blur(4px);
+      filter:blur(20px);
       pointer-events:none;
       z-index:-1;
+    }
+    .loading-overlay{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(15,23,42,0.92);
+      z-index:9999;
+      transition:opacity .35s ease;
+    }
+    .loading-overlay.hidden{
+      opacity:0;
+      pointer-events:none;
+    }
+    .loading-card{
+      width:min(1080px,calc(100% - 40px));
+      padding:30px 26px;
+      border-radius:26px;
+      text-align:center;
+      background:rgba(255,255,255,0.08);
+      box-shadow:0 30px 80px rgba(0,0,0,0.28);
+      border:1px solid rgba(255,255,255,0.12);
+      backdrop-filter:blur(12px);
+    }
+    .loading-card img{
+      width:1080px;
+      height:580px;
+      object-fit:contain;
+      margin:0 auto 18px;
+    }
+    .loading-card h2{
+      margin:0;
+      font-size:22px;
+      color:#ffffff;
+      letter-spacing:0.02em;
+    }
+    .loading-card p{
+      margin:12px 0 0;
+      color:rgba(255,255,255,0.78);
+      font-size:14px;
+      line-height:1.6;
     }
     button,input,select{font:inherit}
     .app{max-width:1500px;margin:auto;padding:24px}
@@ -125,7 +167,7 @@
     .bad{background:#fee2e2;color:#991b1b}
     .icon-btn{border:0;background:transparent;cursor:pointer;padding:6px;border-radius:8px}
     .icon-btn:hover{background:#eef2ff}
-    .summary-grid{grid-template-columns:repeat(3,1fr);margin-top:18px}
+    .summary-grid{grid-template-columns:repeat(3,1fr);margin-top:18px;margin-bottom: 10px;}
     .summary-box{padding:18px}
     .summary-box h3{margin:0 0 12px;font-size:15px}
     .rank-item{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--border)}
@@ -161,7 +203,7 @@
     }
     .drop-zone:hover{background:#dbeafe}
     .hidden{display:none}
-    .footer{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;padding:24px 24px 24px 16px;gap:12px;background-size:auto 40px;}
+    .footer{display:flex;justify-content:space-between;align-items:center;color:#0f172a;font-size:12px;padding:8px 8px 8px 4px;gap:12px;background:rgba(255,255,255,0.92);border:1px solid rgba(15,23,42,0.08);border-radius:20px;box-shadow:0 18px 40px rgba(15,23,42,0.08);backdrop-filter:blur(12px);}
     .details-badge{max-height:40px;opacity:.9;display:block}
     @media(max-width:1100px){
       .stats{grid-template-columns:repeat(2,1fr)}
@@ -176,6 +218,13 @@
   </style>
 </head>
 <body>
+<div class="loading-overlay" id="pageLoadingOverlay">
+  <div class="loading-card">
+    <img src="assets/ScholrAnalyticsDetails.png" alt="Loading ScholrAnalytics">
+    <h2>Loading ScholrAnalytics</h2>
+    <p>Preparing your teacher result dashboard...</p>
+  </div>
+</div>
 <div class="app">
   <header class="topbar">
     <div class="brand">
@@ -273,7 +322,7 @@
     <div class="card summary-box"><h3>🏫 Section Performance</h3><div id="sectionSummary" class="empty">No data available</div></div>
   </section>
 
-  <div class="footer"><span>Data is stored locally in your browser. Export regularly for backup.</span><span id="copyrightText"></span></div>
+  <div class="footer"><span>Data is stored locally in your browser. Export regularly for backup.</span><span id="copyrightText">© 2026 ARTS</span></div>
 </div>
 
 <div class="modal" id="settingsModal">
@@ -358,6 +407,22 @@ function loadState(){
 function saveState(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
 function num(id){ return Math.max(0,Number(document.getElementById(id).value)||0); }
 function esc(v){ return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+
+function hideLoadingOverlay(){
+  const overlay = document.getElementById('pageLoadingOverlay');
+  if (!overlay) return;
+  overlay.classList.add('hidden');
+  window.setTimeout(() => overlay.remove(), 350);
+}
+
+function startLoadingScreen(){
+  const min = 2000;
+  const max = 5000;
+  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+  window.setTimeout(hideLoadingOverlay, delay);
+}
+
+window.addEventListener('load', startLoadingScreen);
 
 function init(){
   populateDropdowns();
