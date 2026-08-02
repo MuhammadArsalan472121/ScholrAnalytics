@@ -206,6 +206,10 @@
     .footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;color:#0f172a;font-size:12px;padding:18px 20px;gap:10px;background:rgba(255,255,255,0.96);border:1px solid rgba(15,23,42,0.1);border-radius:24px;box-shadow:0 18px 40px rgba(15,23,42,0.08);backdrop-filter:blur(12px);}
     .footer span{flex:1 1 auto;min-width:220px}
     .details-badge{max-height:40px;opacity:.9;display:block}
+    .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px}
+    .table-wrap table{width:100%;min-width:100%;}
+    .table-wrap table th,
+    .table-wrap table td{white-space:nowrap;}
     @media(max-width:1100px){
       .stats{grid-template-columns:repeat(2,1fr)}
       .main-layout{grid-template-columns:1fr}
@@ -213,12 +217,13 @@
       .top-actions{width:100%;justify-content:flex-start;gap:10px}
       .top-actions .btn{flex:1 1 auto;min-width:160px}
     }
-    @media(max-width:850px){
-      .stats{grid-template-columns:1fr}
-      .summary-grid{grid-template-columns:1fr}
+    @media(max-width:900px){
+      .main-layout{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:1fr}
+      .grade-grid{grid-template-columns:repeat(2,1fr)}
+      .card-title-row{flex-direction:column;align-items:flex-start;gap:10px}
       .top-actions{flex-direction:column;align-items:stretch;gap:10px}
       .top-actions .btn{width:100%;min-width:0}
-      .card-title-row{flex-direction:column;align-items:flex-start;gap:10px}
       .table-wrap{overflow-x:auto;}
       .footer{justify-content:center;}
       .footer span{text-align:center;}
@@ -232,7 +237,7 @@
       .summary-grid{grid-template-columns:1fr}
       .form-grid{grid-template-columns:1fr}
       .field.full{grid-column:auto}
-      .grade-grid{grid-template-columns:repeat(2,1fr)}
+      .grade-grid{grid-template-columns:1fr}
       .calculated{grid-template-columns:1fr}
       .card-title-row{flex-direction:column;align-items:flex-start;gap:10px}
       .top-actions{width:100%;flex-direction:column;align-items:stretch}
@@ -241,6 +246,8 @@
       .footer span{width:100%;text-align:center;}
       .table-wrap{overflow-x:auto;}
       .criteria-table{min-width:100%;}
+      table{font-size:11px}
+      .grade-box input{padding:10px 8px}
     }
   </style>
 </head>
