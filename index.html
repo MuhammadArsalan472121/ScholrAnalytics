@@ -126,6 +126,12 @@
     .summary-grid{grid-template-columns:repeat(3,1fr);margin-top:18px}
     .summary-box{padding:18px}
     .summary-box h3{margin:0 0 12px;font-size:15px}
+    .contact-section{background:rgba(255,255,255,.95);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;display:grid;gap:12px;}
+    .contact-section h2{margin:0 0 10px;font-size:22px}
+    .contact-section p{margin:0;color:var(--muted);line-height:1.6}
+    .contact-item{background:#f8fafc;border:1px solid var(--border);border-radius:14px;padding:16px}
+    .contact-item h3{margin:0 0 8px;font-size:15px}
+    .contact-item a{color:var(--primary);text-decoration:none;word-break:break-word}
     .rank-item{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--border)}
     .rank-item:last-child{border-bottom:0}
     .rank-name{font-size:13px;font-weight:700}
@@ -268,6 +274,23 @@
     <div class="card summary-box"><h3>🏆 Top Teachers</h3><div id="teacherSummary" class="empty">No data available</div></div>
     <div class="card summary-box"><h3>📚 Subject Performance</h3><div id="subjectSummary" class="empty">No data available</div></div>
     <div class="card summary-box"><h3>🏫 Section Performance</h3><div id="sectionSummary" class="empty">No data available</div></div>
+  </section>
+
+  <section class="contact-section">
+    <h2>Get In Touch</h2>
+    <p>Have a project in mind? Let's talk about how we can help you achieve your goals.</p>
+    <div class="contact-item">
+      <h3>Founder & CEO</h3>
+      <p><strong>Muhammad Arsalan</strong></p>
+    </div>
+    <div class="contact-item">
+      <h3>Email Us</h3>
+      <p><a href="mailto:artechsolutions7@gmail.com">artechsolutions7@gmail.com</a></p>
+    </div>
+    <div class="contact-item">
+      <h3>Call Us</h3>
+      <p><a href="tel:+923121578099">+92 312 1578099</a></p>
+    </div>
   </section>
 
   <div class="footer"><span>Data is stored locally in your browser. Export regularly for backup.</span><span id="copyrightText"></span></div>
